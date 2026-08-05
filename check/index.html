@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>VERA — Verification & Evidence Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#fff;--ink:#16222e;--ink-soft:#4a5b6a;--ink-faint:#8496a5;--sky:#2b7fd4;--sky-deep:#1c5fa5;
+--sky-line:#cfe4f7;--sky-wash:#f2f8fe;--sky-wash2:#e8f3fd;--ok:#1b9e6e;--ok-wash:#e9f8f1;--warn:#c9821a;
+--warn-wash:#fdf3e3;--bad:#d24545;--bad-wash:#fdeeee;--rule:#e7eef4;--shadow:0 1px 2px rgba(24,60,95,.04),0 8px 24px rgba(24,60,95,.06);--r:12px;}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{font-family:'Hanken Grotesk',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.mono{font-family:'JetBrains Mono',monospace}button{font-family:inherit;cursor:pointer}
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+header.top{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--sky-line);background:linear-gradient(180deg,#fff,var(--sky-wash))}
+.logo{width:34px;height:34px;border-radius:9px;flex:0 0 auto;border:1.5px solid var(--sky);display:grid;place-items:center;background:#fff;color:var(--sky-deep)}
+.logo svg{width:20px;height:20px}
+.title h1{font-size:16px;font-weight:700;margin:0;letter-spacing:-.01em}.title p{margin:0;font-size:11.5px;color:var(--ink-faint)}
+.spacer{flex:1}
+.body{display:flex;flex:1;min-height:0}
+.rail{width:288px;flex:0 0 288px;border-right:1px solid var(--sky-line);background:var(--sky-wash);overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:18px}
+.rail h2{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 9px 2px}
+.drop{border:1.5px dashed var(--sky);border-radius:var(--r);background:#fff;padding:16px 14px;text-align:center;color:var(--ink-soft);transition:.15s;cursor:pointer;}
+.drop:hover{background:var(--sky-wash2);border-color:var(--sky-deep)}
+.drop svg{width:24px;height:24px;color:var(--sky);margin-bottom:5px}.drop b{display:block;font-size:12px;color:var(--ink)}.drop span{font-size:10.5px;color:var(--ink-faint)}
+
+.scard{border:1px solid var(--sky-line);background:#fff;border-radius:10px;padding:9px 11px;margin-bottom:7px;display:flex;align-items:center;gap:9px;transition: border-color 0.15s;position:relative;}
+.scard:hover{border-color:var(--sky);}
+.scard .sw{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+.scard .sname{font-weight:600;font-size:12px}.scard .smeta{font-size:10.5px;color:var(--ink-faint);font-family:'JetBrains Mono',monospace}
+.scard input[type="checkbox"]{margin-left:auto;width:16px;height:16px;accent-color:var(--sky);cursor:pointer;margin-right:24px;}
+
+.scard .sdelete{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--ink-faint);font-size:16px;font-weight:600;padding:4px;display:flex;align-items:center;justify-content:center;border-radius:4px;line-height:1;transition:0.1s;}
+.scard .sdelete:hover{color:var(--bad);background:var(--bad-wash);}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column;background:#fff}
+.tabs{display:flex;gap:2px;padding:0 22px;border-bottom:1px solid var(--sky-line)}
+.tab{border:none;background:none;padding:15px 4px;margin-right:26px;font-size:13.5px;font-weight:600;color:var(--ink-faint);border-bottom:2.5px solid transparent;display:flex;align-items:center;gap:8px}
+.tab .num{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:11px;background:var(--rule);color:var(--ink-soft);font-family:'JetBrains Mono',monospace}
+.tab.active{color:var(--sky-deep);border-color:var(--sky)}.tab.active .num{background:var(--sky);color:#fff}
+.view{flex:1;overflow-y:auto;padding:20px 24px 60px}
+
+.grid-toggle-bar{display:inline-flex;background:var(--sky-wash);border:1px solid var(--sky-line);border-radius:8px;padding:2px;margin-bottom:14px;}
+.grid-toggle-btn{border:none;background:none;padding:5px 12px;font-size:11.5px;font-weight:600;color:var(--ink-soft);border-radius:6px;transition:0.1s;}
+.grid-toggle-btn.active{background:#fff;color:var(--sky-deep);box-shadow:0 1px 3px rgba(0,0,0,0.05);font-weight:700;}
+
+.macro-split {display: flex; gap: 16px; margin-bottom: 20px; align-items: stretch;}
+.macro-left {width: 32%; max-width: 32%; flex: 0 0 32%; display: flex; flex-direction: column;}
+.macro-right {width: 68%; max-width: 68%; flex: 0 0 68%; display: flex; flex-direction: column; gap: 16px;}
+
+.panel{border:1px solid var(--sky-line);border-radius:var(--r);background:#fff;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+.panel .ph{padding:12px 15px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#fff,var(--sky-wash));flex:0 0 auto}
+.panel .ph h3{margin:0;font-size:13px;font-weight:700}
+.panel .pb{padding:12px 15px;overflow-y:auto;}
+
+.grid-8-boxes{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;}
+.stat{border:1px solid var(--sky-line);border-radius:10px;padding:12px 13px;background:var(--sky-wash);display:flex;flex-direction:column;justify-content:center;height: 84px;}
+.stat .k{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
+.stat .v{font-size:18px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:2px}
+
+.maprow{display:flex;align-items:center;gap:10px;padding:4.5px 0;border-bottom:1px solid var(--rule);font-size:11.5px}
+.maprow:last-child{border-bottom:none}
+.maprow .canon-target{font-family:'JetBrains Mono',monospace;color:var(--sky-deep);font-weight:700;width:145px;}
+.maprow .arr{color:var(--ink-faint);font-size:11px;}
+.maprow .csv-found{font-family:'JetBrains Mono',monospace;color:var(--ink-soft);font-weight:400;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.maprow .ty{margin-left:auto;font-size:9px;padding:1px 6px;border-radius:50px;font-weight:500;white-space:nowrap;}
+.maprow .ty.aligned{color:var(--ok);background:var(--ok-wash);border:1px solid #ccebdf;}
+.maprow .ty.missing{color:var(--bad);background:var(--bad-wash);border:1px solid #f8d7d7;}
+
+table.dt{width:100%;border-collapse:collapse;font-size:11.5px;font-family:'JetBrains Mono',monospace}
+table.dt th{text-align:left;padding:7px 9px;background:var(--sky-wash2);color:var(--sky-deep);font-weight:600;border-bottom:1px solid var(--sky-line);position:sticky;top:0;white-space:nowrap;font-size:10.5px}
+table.dt td{padding:6px 9px;border-bottom:1px solid var(--rule);white-space:nowrap;color:var(--ink-soft)}
+table.dt tr:hover td{background:var(--sky-wash)}
+.scrollx{overflow:auto;border:1px solid var(--sky-line);border-radius:10px;}
+.section-h{display:flex;align-items:center;gap:10px;margin:22px 0 14px}
+.section-h h2{font-size:15px;margin:0;font-weight:700}
+.pill{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:999px;display:inline-flex;align-items:center;gap:5px}
+.pill.ok{background:var(--ok-wash);color:var(--ok)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.btn{border:1px solid var(--sky);background:var(--sky);color:#fff;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:600}
+.muted{color:var(--ink-faint)}.cta-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+
+/* Stage 2 Interactive Layout Styles */
+.spec-attr-row {display:flex; align-items:center; padding:9px 10px; border-bottom:1px solid var(--rule); font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--ink-soft); cursor:pointer; transition:0.1s; border-radius:6px; margin-bottom:2px;}
+.spec-attr-row:last-child {border-bottom:none;}
+.spec-attr-row:hover {background:var(--sky-wash2); color:var(--sky-deep);}
+.spec-attr-row.selected {background:var(--sky-wash); color:var(--sky-deep); font-weight:600; border-left:3px solid var(--sky);}
+.spec-attr-bullet {width:6px; height:6px; border-radius:50%; background:var(--sky); margin-right:10px; flex-shrink:0;}
+
+/* Dropdown Context Styles */
+.detail-pane-wrapper {border:1px solid var(--sky-line); border-radius:12px; background:#fff; box-shadow:var(--shadow); display:flex; flex-direction:column; overflow:hidden;}
+.detail-pane-header {padding:12px 16px; background:linear-gradient(180deg, #fff, var(--sky-wash)); border-bottom:1px solid var(--rule); font-weight:700; font-size:13px; color:var(--ink); display:flex; justify-content:space-between; align-items:center; cursor:pointer; user-select:none;}
+.detail-pane-header:hover {background:var(--sky-wash2);}
+.detail-pane-body {padding:16px; overflow-y:auto; flex:1; display:none;}
+
+.detail-block-row {margin-bottom:16px;}
+.detail-block-row:last-child {margin-bottom:0;}
+.detail-block-title {font-size:10.5px; font-weight:700; text-transform:uppercase; color:var(--ink-faint); letter-spacing:0.05em; margin-bottom:5px;}
+.detail-block-value {font-size:13px; color:var(--ink); line-height:1.5;}
+
+.spec-list {list-style: none; padding: 0; margin: 4px 0 0 0;}
+.spec-list li {display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px; font-size: 12.5px;}
+.spec-list li .icon-ok {color: var(--ok); font-weight: bold;}
+.spec-list li .icon-bad {color: var(--bad); font-weight: bold;}
+
+.filter-dropdown-select{border:1px solid var(--sky-line); border-radius:6px; padding:4px 8px; font-size:12px; color:var(--ink); background:#fff; outline:none; font-weight:600;}
+
+/* Assessment Analytics Box Styles */
+.assessment-card {border: 1px solid var(--sky-line); border-radius: 12px; background: #fff; box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden;}
+.assessment-header {padding: 10px 16px; background: linear-gradient(180deg, #fff, var(--sky-wash)); border-bottom: 1px solid var(--sky-line); display: flex; align-items: center; gap: 14px;}
+.assessment-title-group {display: flex; align-items: center; gap: 12px;}
+.assessment-title {font-weight: 700; font-size: 14px; color: var(--ink);}
+.assessment-status {font-size: 11.5px; font-weight: 700; color: var(--ok); text-transform: uppercase; letter-spacing: 0.02em; padding: 2px 8px; border-radius: 4px;}
+.assessment-status.ok {background: var(--ok-wash); color: var(--ok);}
+.assessment-status.warn {background: var(--warn-wash); color: var(--warn);}
+.assessment-status.bad {background: var(--bad-wash); color: var(--bad);}
+.assessment-status.info {background: var(--sky-wash); color: var(--sky-deep);}
+
+.assessment-controls {margin-left: auto; display: flex; align-items: center; gap: 14px;}
+.control-select-label {font-size: 11px; font-weight: 600; color: var(--ink-faint); letter-spacing: 0.04em; text-transform: uppercase;}
+.control-dropdown-input {border: 1px solid var(--sky-line); border-radius: 8px; padding: 5px 12px; font-size: 12.5px; color: var(--ink); background: #fff; font-weight: 500; min-width: 185px; outline: none; cursor: pointer;}
+.control-dropdown-input:disabled {background: #fafafa; color: var(--ink-faint); cursor: not-allowed;}
+.assessment-body-canvas {padding: 20px; min-height: 280px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #fff; color: var(--ink-faint); font-size: 13px;}
+.inference{font-size:12.5px;color:var(--ink);background:var(--sky-wash);border-left:3px solid var(--sky);border-radius:0 8px 8px 0;padding:9px 11px;line-height:1.6;transition:border-left-color 0.2s;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg></div>
+    <div class="title"><h1>VERA</h1><p>Design verification across the ML-analytics lifecycle · attribute &amp; evidence · SRS rule-conformance</p></div>
+    <div class="spacer"></div>
+    <div style="font-size:11px;color:var(--ink-faint);font-family:'JetBrains Mono',monospace;letter-spacing:.03em">v1.9</div>
+  </header>
+  
+  <div class="body">
+    <aside class="rail">
+      <div>
+        <h2>Input source</h2>
+        <div id="drop" class="drop" onclick="triggerBrowse()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          <b>Drop session logs</b>
+          <span>.txt (pipe) or .csv</span>
+        </div>
+      </div>
+      <div>
+        <h2>Sessions</h2>
+        <div id="sessions">
+          <div class="muted" style="font-size:12px; padding:5px;">No active capture slices loaded.</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <nav class="tabs">
+        <button id="tab1" class="tab active" onclick="switchStageTab(1)"><span class="num">1</span>Preprocess</button>
+        <button id="tab2" class="tab" onclick="switchStageTab(2)" disabled style="opacity:0.4;"><span class="num">2</span>Attribute Assessment</button>
+        <button id="tab3" class="tab" onclick="switchStageTab(3)" disabled style="opacity:0.4;"><span class="num">3</span>Feature Assessment</button>
+      </nav>
+      
+      <section id="view" class="view">
+        <div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--ink-faint);">
+          Please load a diagnostic file from the sidebar to view mapped configuration attributes.
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+const ORIGINAL_17_MAPPINGS = [
+    {"canon": "seq_id", "csv": "Seq", "group": "identity_time"},
+    {"canon": "timestamp", "csv": "Timestamp", "group": "identity_time"},
+    {"canon": "event_code", "csv": "Event Code", "group": "code_semantics"},
+    {"canon": "extra_srcinfo", "csv": "Src", "group": "code_semantics"},
+    {"canon": "log_level", "csv": "Level", "group": "code_semantics"},
+    {"canon": "event_category", "csv": "Category", "group": "code_semantics"},
+    {"canon": "event_type", "csv": "Type", "group": "code_semantics"},
+    {"canon": "phase", "csv": "Ph", "group": "lifecycle_fsm"},
+    {"canon": "state", "csv": "St", "group": "lifecycle_fsm"},
+    {"canon": "substate", "csv": "Sub", "group": "lifecycle_fsm"},
+    {"canon": "activity", "csv": "Act", "group": "lifecycle_fsm"},
+    {"canon": "depth", "csv": "Depth", "group": "lifecycle_fsm"},
+    {"canon": "message", "csv": "Message", "group": "payload_messages"},
+    {"canon": "custom_data", "csv": "Value", "group": "payload_messages"},
+    {"canon": "custom_data_size", "csv": "Val Len", "group": "payload_messages"},
+    {"canon": "ext_msg_length", "csv": "ExtLen", "group": "payload_messages"},
+    {"canon": "ext_message", "csv": "Ext Msg", "group": "payload_messages"}
+];
+
+const ATTRIBUTE_METADATA_SPECS = {
+    "seq_id": {
+        "isStructured": true,
+        "desc": "Globally unique, monotonically increasing record id, seeded from boot_count and unique across reboots. The ordering backbone for every downstream analytic.",
+        "valid": [
+            "Δ = +1 between consecutive records",
+            "A larger step only at a reboot / seed boundary",
+            "A single clean wrap at uint32 max"
+        ],
+        "anomalies": [
+            "Gap (Δ>1) = lost records",
+            "Δ=0 duplicate",
+            "Decrease not wrap/reboot"
+        ],
+        "eval": "Read as a 1-D ordering series — consecutive deltas scanned for gaps and duplicates, with change-point detection isolating the legitimate reboot seed."
+    },
+    "timestamp": {
+        "isStructured": true,
+        "desc": "Event time — the primary axis for lifecycle timing and stage-duration analysis.",
+        "valid": [
+            "Non-decreasing within a session",
+            "Equal timestamps only in tight transition clusters",
+            "Backward jump only at a session / boot boundary"
+        ],
+        "anomalies": [
+            "Backward jump mid-session",
+            "Implausible forward jump",
+            "Zero on finalized record"
+        ],
+        "eval": "Treated as a monotonic series; backward jumps flagged and inter-arrival gaps screened for z-score outliers."
+    },
+    "event_code": {
+        "isStructured": true,
+        "desc": "The ASC primary key — the domain-defined unique event id. Resolves via asc_get_info() to enum_string, description, category and stage group (S0–S9).",
+        "valid": [
+            "Resolves to a registered ASC entry",
+            "Code category equals event_category",
+            "Code-derived type equals event_type",
+            "Falls within a defined ASC numeric range"
+        ],
+        "anomalies": [
+            "Unregistered code",
+            "Category/type mismatch",
+            "Out-of-range code"
+        ],
+        "eval": "Resolution checked against the ASC catalogue; code↔category/type agreement framed as a classifier."
+    },
+    "extra_srcinfo": {
+        "isStructured": true,
+        "desc": "Emitting library component (CI) identity in bits 0–14, with a message-truncation flag in bit 15. Maps each event to a baselined SBOM CI for IEC 62304 traceability.",
+        "valid": [
+            "source_id resolves to a baselined CI",
+            "bit 15 masked before reading the id",
+            "Source coherent with category & activity"
+        ],
+        "anomalies": [
+            "source_id not in CI baseline",
+            "CI–context mismatch",
+            "bit15 set (truncation)"
+        ],
+        "eval": "Source IDs mapped to baselined CIs; frequency attribution per subsystem for traceability."
+    },
+    "log_level": {
+        "isStructured": true,
+        "desc": "RFC 5424 severity 0–7. A V2 addition — not carried by the 13-column capture.",
+        "valid": [
+            "Within 0–7",
+            "Consistent with event_type and code",
+            "No sustained EMERGENCY / ALERT bursts"
+        ],
+        "anomalies": [
+            "Level > 7",
+            "Severity inversion",
+            "Sustained EMERGENCY/ALERT burst"
+        ],
+        "eval": "Severity band 0–7 (RFC 5424) — not sourced in the 13-column capture, so no values to evaluate here."
+    },
+    "event_category": {
+        "isStructured": true,
+        "desc": "Semantic domain of the event (0–10), snapshotted from session context. Should equal the code’s ASC category.",
+        "valid": [
+            "Within 0–10",
+            "Matches the code domain",
+            "Consistent with the source"
+        ],
+        "anomalies": [
+            "Undefined category",
+            "Contradicts code/source",
+            "MISC where domain expected"
+        ],
+        "eval": "Category distribution plus a classifier checking agreement with the code / source domain."
+    },
+    "event_type": {
+        "isStructured": true,
+        "desc": "Criticality — 0 STATUS, 1 ERROR, 2 ALERT, 3 NOTIFY, 4 ALARM. NOT independent: set from asc_code_to_event_type(event_code), so it must always agree with the code.",
+        "valid": [
+            "Equals the type derived from the code",
+            "STATUS never used for a fault",
+            "ALARM / ALERT only where code & phase make them meaningful",
+            "Within 0–4"
+        ],
+        "anomalies": [
+            "type ≠ derived(code)",
+            "Fault as STATUS",
+            "ALARM in invalid phase/state"
+        ],
+        "eval": "Supervised binary framing — logged type vs code-implied criticality → confusion matrix with accuracy, precision, recall and F1."
+    },
+    "phase": {
+        "isStructured": true,
+        "desc": "Lifecycle phase — the coarsest FSM level. Drives lifecycle-completeness and stage-timing analytics.",
+        "valid": [
+            "Advances forward through the expected lifecycle",
+            "Graceful shutdown at the end",
+            "No regression to an earlier phase"
+        ],
+        "anomalies": [
+            "Phase regression",
+            "Out-of-order",
+            "Premature shutdown"
+        ],
+        "eval": "Lifecycle order modelled as Markov transitions; regressions and illegal transitions flagged."
+    },
+    "state": {
+        "isStructured": true,
+        "desc": "FSM state within the phase, validated against the phase’s allowed state set.",
+        "valid": [
+            "Valid for the current phase",
+            "Contiguous transitions",
+            "Within the FSM state count"
+        ],
+        "anomalies": [
+            "Invalid phase–state combo",
+            "Missing/late state",
+            "ID beyond FSM count"
+        ],
+        "eval": "State sequence modelled as Markov transitions; combinations invalid for the phase flagged."
+    },
+    "substate": {
+        "isStructured": true,
+        "desc": "FSM substate within the state — short, clustered transition steps.",
+        "valid": [
+            "Valid for its parent state",
+            "Short clustered runs at boundaries",
+            "No over-long persistence"
+        ],
+        "anomalies": [
+            "Invalid for state",
+            "Regression within transition",
+            "Over-long persistence"
+        ],
+        "eval": "Substate runs modelled as transitions; over-long persistence and invalid steps flagged."
+    },
+    "activity": {
+        "isStructured": true,
+        "desc": "The concrete action emitted (blower ON/OFF, pressure sampling, …). Paired actions should balance.",
+        "valid": [
+            "Valid for the phase / state",
+            "ON/OFF pairs balanced",
+            "Measurement actions carry payload"
+        ],
+        "anomalies": [
+            "Invalid context",
+            "Missing paired action",
+            "Measurement w/o payload",
+            "ABORT"
+        ],
+        "eval": "Action cadence modelled as transitions; ON/OFF balance and phase-context validity checked."
+    },
+    "depth": {
+        "isStructured": true,
+        "desc": "Call-stack nesting depth (uint8 0–255). A V2 addition — not carried by the 13-column capture. Monitors call-stack health.",
+        "valid": [
+            "Oscillates within a small band",
+            "Returns to baseline at each phase boundary",
+            "No saturation at 255",
+            "Balanced enter / exit"
+        ],
+        "anomalies": [
+            "Gap (Δ>1) = lost records",
+            "Δ=0 duplicate",
+            "Decrease not wrap/reboot"
+        ],
+        "eval": "Call-stack depth band 0–255 "
+    },
+    "message": {
+        "isStructured": true,
+        "desc": "Human-readable primary description (char[48]); interpretability text, not a model input. Overflow sets the truncation flag.",
+        "valid": [
+            "Present for critical lifecycle events",
+            "Agrees with the structured fields",
+            "Not truncated"
+        ],
+        "anomalies": [
+            "Truncation flag set",
+            "Missing for critical event",
+            "Contradicts structured fields"
+        ],
+        "eval": "Interpretability text — presence for critical events and the truncation-flag rate are scanned."
+    },
+    "custom_data": {
+        "isStructured": true,
+        "desc": "Binary payload / decoded measurement value — the primary quantitative signal for drift and threshold analysis.",
+        "valid": [
+            "Present only for measurement actions",
+            "Decodes within physical bounds",
+            "Continuous, no discontinuity"
+        ],
+        "anomalies": [
+            "Missing for measurement",
+            "Present for control",
+            "Out-of-bounds",
+            "Discontinuity"
+        ],
+        "eval": "The primary quantitative signal — outlier detection (z-score / IQR), rolling-mean drift (CUSUM), distribution, and a measurement↔payload classifier."
+    },
+    "custom_data_size": {
+        "isStructured": true,
+        "desc": "Payload length (uint16). 0 for control / transition events; 1–32 when a measurement payload is present.",
+        "valid": [
+            "0 for non-data events",
+            "1–32 when data is present",
+            "Matches actual payload presence"
+        ],
+        "anomalies": [
+            "Pre-clamp > 32 (loss)",
+            "Size↔payload mismatch",
+            "Size for non-measurement act"
+        ],
+        "eval": "Declared length vs actual payload presence → confusion matrix; clamp scan for pre-clamp loss."
+    },
+    "ext_msg_length": {
+        "isStructured": true,
+        "desc": "Extended-payload length (uint 16). 0 normally; 1-32 when a diagnostic supplement is present",
+        "valid": [
+            "0 for the majority",
+            "1–32 when present",
+            "Equals the real extended-text length"
+        ],
+        "anomalies": [
+            "Pre-clamp > 32 (loss)",
+            "Length–content mismatch"
+        ],
+        "eval": "Length distribution with a clamp scan for pre-clamp truncation."
+    },
+    "ext_message": {
+        "isStructured": true,
+        "desc": "Sparse tertiary diagnostic supplement, consistent with a valid parent record.",
+        "valid": [
+            "Sparse",
+            "Consistent with the parent record",
+            "Well-formed"
+        ],
+        "anomalies": [
+            "Contradicts fields",
+            "No valid parent",
+            "Malformed"
+        ],
+        "eval": "Sparse supplement - presence and consistency scan."
+    }
+};
+
+let loadedSessions = [];
+let currentActiveStage = 1;
+let currentGridMode = "clean"; 
+let lastProcessedResponseData = null;
+let activeAttributeFilterGroup = "all"; 
+let activeSelectedAttributeKey = "seq_id"; 
+let isContextPaneOpen = true; 
+
+function triggerBrowse() {
+    if (window.pywebview && window.pywebview.api) {
+        window.pywebview.api.browse_and_process_file().then(res => {
+            if (res.status === "success") {
+                let sessionIndex = loadedSessions.length + 1;
+                let paddingIndex = sessionIndex < 10 ? '0' + sessionIndex : sessionIndex;
+                
+                loadedSessions.forEach(s => s.selected = false);
+                loadedSessions.push({
+                    id: `S${paddingIndex}`,
+                    name: `Session ${paddingIndex} (S${paddingIndex})`,
+                    filename: res.filename,
+                    selected: true,
+                    data: res
+                });
+
+                lastProcessedResponseData = res;
+
+                document.getElementById('tab2').removeAttribute('disabled');
+                document.getElementById('tab2').style.opacity = '1';
+                document.getElementById('tab3').removeAttribute('disabled');
+                document.getElementById('tab3').style.opacity = '1';
+
+                renderSidebarSessions();
+                switchStageTab(currentActiveStage);
+            } else if (res.status === "error") {
+                alert("Processing Exception:\n" + res.message);
+            }
+        });
+    }
+}
+
+function handleSessionToggle(sessionId, isChecked) {
+    loadedSessions.forEach(s => s.selected = (s.id === sessionId && isChecked));
+    renderSidebarSessions();
+    let currentSelected = loadedSessions.filter(s => s.selected);
+    if (currentSelected.length > 0) {
+        lastProcessedResponseData = currentSelected[currentSelected.length - 1].data;
+        switchStageTab(currentActiveStage);
+    }
+}
+
+function deleteSession(sessionId, event) {
+    if (event) event.stopPropagation(); 
+    const targetIndex = loadedSessions.findIndex(s => s.id === sessionId);
+    if (targetIndex === -1) return;
+    const wasSelected = loadedSessions[targetIndex].selected;
+    loadedSessions.splice(targetIndex, 1);
+    
+    if (wasSelected && loadedSessions.length > 0) {
+        loadedSessions[loadedSessions.length - 1].selected = true;
+        lastProcessedResponseData = loadedSessions[loadedSessions.length - 1].data;
+    } else if (loadedSessions.length === 0) {
+        lastProcessedResponseData = null;
+        document.getElementById('tab2').setAttribute('disabled', 'true');
+        document.getElementById('tab2').style.opacity = '0.4';
+        document.getElementById('tab3').setAttribute('disabled', 'true');
+        document.getElementById('tab3').style.opacity = '0.4';
+        
+        document.getElementById('view').innerHTML = `
+            <div style="display:flex; justify-content:center; align-items:center; height:100%; color:var(--ink-faint);">
+              Please load a diagnostic file from the sidebar to view mapped configuration attributes.
+            </div>`;
+    }
+    renderSidebarSessions();
+    if (lastProcessedResponseData) {
+        switchStageTab(currentActiveStage);
+    }
+}
+
+function renderSidebarSessions() {
+    if (loadedSessions.length === 0) {
+        document.getElementById('sessions').innerHTML = `<div class="muted" style="font-size:12px; padding:5px;">No active capture slices loaded.</div>`;
+        return;
+    }
+    document.getElementById('sessions').innerHTML = loadedSessions.map(session => `
+        <div class="scard" style="${session.selected ? 'border-color:var(--sky); background:var(--sky-wash);' : ''}">
+            <div class="sw" style="background:${session.selected ? 'var(--ok)' : 'var(--ink-faint)'}"></div>
+            <div style="min-width:0; flex:1; max-width:140px;">
+                <div class="sname">${session.name}</div>
+                <div class="smeta" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${session.filename}">${session.filename}</div>
+            </div>
+            <input type="checkbox" ${session.selected ? 'checked' : ''} onchange="handleSessionToggle('${session.id}', this.checked)" />
+            <button class="sdelete" title="Remove dataset" onclick="deleteSession('${session.id}', event)">×</button>
+        </div>
+    `).join('');
+}
+
+function switchStageTab(stageId) {
+    currentActiveStage = stageId;
+    document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab' + stageId).classList.add('active');
+
+    if (!lastProcessedResponseData) return;
+    if (stageId === 1) {
+        renderPreprocessView(lastProcessedResponseData);
+    } else if (stageId === 2) {
+        renderAssessmentView();
+    } else if (stageId === 3) {
+    document.getElementById('view').innerHTML = `
+        <div class="section-h">
+            <h2>Stage 3 — Feature Assessment</h2>
+            <div class="line" style="flex: 1; height: 1px; background: var(--sky-line);"></div>
+        </div>
+        
+        <div class="assess-wrap" style="display: flex; gap: 16px; margin-top: 10px; align-items: stretch;">
+            <div style="width: 330px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px;">
+                <div class="selector" style="flex: 1; border: 1px solid var(--sky-line); border-radius: 12px; background: #fff; padding: 14px; box-shadow: var(--shadow); display: flex; flex-direction: column;">
+                    <div class="sh" style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
+                        <span style="font-weight: 700; color: var(--ink);">Features</span>
+                        <span class="mono" style="font-size: 10px; color: var(--ink-faint); letter-spacing: 0.05em;">STAGE 3</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 14px;">
+                        <select id="feature-group-dropdown" onchange="filterFeatureAssessmentList()" style="width: 100%; padding: 6px 10px; font-size: 12.5px; font-family: inherit; border: 1px solid var(--sky-line); border-radius: 6px; background: #fff; color: var(--ink); outline: none;">
+                            <option value="all">all groups</option>
+                            <option value="temporal">Temporal</option>
+                            <option value="measurement">Measurement</option>
+                            <option value="lifecycle">Lifecycle</option>
+                            <option value="integrity">Integrity</option>
+                            <option value="semantic">Semantic</option>
+                            <option value="safety">Safety/Exception</option>
+                        </select>
+                    </div>
+                    
+                    <div id="feature-spec-list-scroll" style="flex: 1; overflow-y: auto; max-height: 420px; display: flex; flex-direction: column; gap: 2px; padding-right: 4px;">
+                        <div class="feat-list-item" data-group="temporal" id="feat-item-row-F1" onclick="selectFeatureKey('F1')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F1</span> · inter-event interval & rate</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Timeliness</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+                        <div class="feat-list-item" data-group="temporal" id="feat-item-row-F4" onclick="selectFeatureKey('F4')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F4</span> · alarm rate & burst</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Robustness</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+                        <div class="feat-list-item" data-group="temporal" id="feat-item-row-F5" onclick="selectFeatureKey('F5')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F5</span> · phase dwell time</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Repeatability</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+                        <div class="feat-list-item" data-group="temporal" id="feat-item-row-F8" onclick="selectFeatureKey('F8')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F8</span> · action cadence</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Repeatability</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+
+                        <div class="feat-list-item" data-group="measurement" id="feat-item-row-F9" onclick="selectFeatureKey('F9')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F9</span> · measurement drift</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Robustness</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+                        <div class="feat-list-item" data-group="measurement" id="feat-item-row-F24" onclick="selectFeatureKey('F24')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F24</span> · per-action value</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Consistency</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+                        <div class="feat-list-item" data-group="measurement" id="feat-item-row-Fosc" onclick="selectFeatureKey('Fosc')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">Fosc</span> · pressure oscillation compliance</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Robustness</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+
+                        <div class="feat-list-item" data-group="lifecycle" id="feat-item-row-F19" onclick="selectFeatureKey('F19')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F19</span> · lifecycle stage coverage</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Completeness</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+                        <div class="feat-list-item" data-group="lifecycle" id="feat-item-row-F21" onclick="selectFeatureKey('F21')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F21</span> · transition integrity</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Integrity</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+                        <div class="feat-list-item" data-group="lifecycle" id="feat-item-row-F-LV" onclick="selectFeatureKey('F-LV')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F-LV</span> · level-transition sequence</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Integrity</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+
+                        <div class="feat-list-item" data-group="integrity" id="feat-item-row-F1d" onclick="selectFeatureKey('F1d')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F1d</span> · dropped-record loss</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Integrity</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+                        <div class="feat-list-item" data-group="integrity" id="feat-item-row-F2" onclick="selectFeatureKey('F2')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F2</span> · records per CI</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Consistency</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+                        <div class="feat-list-item" data-group="integrity" id="feat-item-row-F25" onclick="selectFeatureKey('F25')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F25</span> · payload presence validity</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Integrity</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+
+                        <div class="feat-list-item" data-group="semantic" id="feat-item-row-F10" onclick="selectFeatureKey('F10')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F10</span> · code–category consistency</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Consistency</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+                        <div class="feat-list-item" data-group="semantic" id="feat-item-row-F16" onclick="selectFeatureKey('F16')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer; opacity: 0.6;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink-faint); text-decoration: line-through;"><span class="mono">F16</span> · severity–type consistency</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">inactive</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+
+                        <div class="feat-list-item" data-group="safety" id="feat-item-row-F-EX" onclick="selectFeatureKey('F-EX')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F-EX</span> · exception detection</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Robustness</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+                        <div class="feat-list-item" data-group="safety" id="feat-item-row-F-BT" onclick="selectFeatureKey('F-BT')" style="display: flex; align-items: center; justify-content: space-between; padding: 8px; border-radius: 6px; cursor: pointer;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <div style="font-size: 12.5px; font-weight: 600; color: var(--ink);"><span class="mono" style="color:var(--sky-deep);">F-BT</span> · battery compliance</div>
+                                <div style="font-size: 11px; color: var(--ink-faint);">Robustness</div>
+                            </div>
+                            <div style="width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--ink-faint);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px;">
+                
+                <div class="details-pane" style="margin: 0; padding: 16px; border: 1px solid var(--sky-line); border-radius: 12px; background: #fff; box-shadow: var(--shadow);">
+                    <div class="details-pane-header" onclick="toggleFeatureContextPaneBody()" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="mono" id="feat-display-id" style="font-weight: 700; color: var(--sky-deep); background: var(--sky-wash); padding: 2px 6.5px; border-radius: 4px; font-size: 13px;">F1</span>
+                            <span id="feat-display-title" style="font-weight: 700; font-size: 15px; color: var(--ink);">inter-event interval & rate</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span id="feat-display-built" class="muted" style="font-size: 11px; font-style: italic; color: var(--ink-faint);">built from seq_id × timestamp</span>
+                            <span id="feature-context-toggle-icon" style="font-size: 12px; color: var(--ink-faint); transition: transform 0.2s;">▼</span>
+                        </div>
+                    </div>
+                    
+                    <div id="feature-context-pane-body" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule); display: block;">
+                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--ink-faint); letter-spacing: 0.04em; margin-bottom: 4px;">About Calculation Strategy</div>
+                        <p id="feature-about-box-content" style="font-size: 13px; line-height: 1.5; color: var(--ink-soft); margin: 0 0 12px 0;">
+                            Calculates event frequency patterns and measures real-time execution speeds to identify unexpected gaps or bottlenecks.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="assessment-card" style="margin: 0; flex: 1; display: flex; flex-direction: column;">
+                    <div class="assessment-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--rule); background: var(--sky-wash);">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <div>
+                                <span class="assessment-title" style="font-size: 12px; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; display: block; letter-spacing: 0.5px;">Verdict</span>
+                                <span id="feat-metric-verdict" style="font-size: 14px; font-weight: 700; color: var(--ok);">VERIFIED OK</span>
+                            </div>
+                            <div style="width: 1px; height: 24px; background: var(--sky-line);"></div>
+                            <div>
+                                <span class="assessment-title" style="font-size: 12px; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; display: block; letter-spacing: 0.5px;">Calculated Value</span>
+                                <span id="feat-metric-score" style="font-size: 14px; font-weight: 600; font-family: 'JetBrains Mono'; color: var(--ink);">0.042s median</span>
+                            </div>
+                        </div>
+
+                        <div class="assessment-controls" style="display: flex; align-items: center; gap: 8px;">
+                            <span class="control-select-label" style="font-size: 11.5px; font-weight: 600; color: var(--ink-soft);">ML Method</span>
+                            <select id="feat-ml-method-dropdown" class="control-dropdown-input" onchange="onFeatureControlChange()" style="padding: 4px 8px; font-size: 12px; font-family: inherit; border: 1px solid var(--sky-line); border-radius: 4px; outline: none; background: #fff; color: var(--ink);">
+                                <option value="frequency_burst">Inter-arrival interval & rate</option>
+                            </select>
+                            
+                            <span class="control-select-label" style="font-size: 11.5px; font-weight: 600; color: var(--ink-soft); margin-left: 6px;">Chart</span>
+                            <select id="feat-chart-type-dropdown" class="control-dropdown-input" onchange="onFeatureControlChange()" style="padding: 4px 8px; font-size: 12px; font-family: inherit; border: 1px solid var(--sky-line); border-radius: 4px; outline: none; background: #fff; color: var(--ink);">
+                                <option value="line">Line</option>
+                                <option value="distribution">Distribution</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="assessment-body-canvas" style="flex: 1; padding: 16px; min-height: 280px; position: relative;">
+                        <div id="feature-render-canvas" style="height: 100%; width: 100%;"></div>
+                    </div>
+                    
+                    <div style="padding: 12px 16px; border-top: 1px solid var(--rule); background: #fafbfc;">
+                        <div style="font-weight: 700; font-size: 11px; color: var(--ink-faint); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Automated Pipeline Inference</div>
+                        <div id="feat-inference-text" style="font-size: 13px; line-height: 1.5; color: var(--ink-soft);">Awaiting signal...</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    `;
+    
+    // Default dynamic tracking load
+    selectFeatureKey("F1");
+    }
+}
+
+function toggleGridMode(mode) {
+    currentGridMode = mode;
+    document.querySelectorAll('.grid-toggle-btn').forEach(b => b.classList.remove('active'));
+    if (mode === "clean") {
+        document.getElementById('btn-show-clean').classList.add('active');
+    } else {
+        document.getElementById('btn-show-invalid').classList.add('active');
+    }
+    if (lastProcessedResponseData) {
+        renderPreprocessView(lastProcessedResponseData);
+    }
+}
+
+function renderPreprocessView(data) {
+    const rawMaps = data.discovered_maps || {};
+    let leftMappingHTML = ORIGINAL_17_MAPPINGS.map(item => {
+        let displayedCsvValue = rawMaps[item.canon] || "-";
+        let isPresent = (displayedCsvValue !== "-");
+        let statusTag = isPresent ? `<span class="ty aligned">Aligned</span>` : `<span class="ty missing">Missing</span>`;
+        return `
+            <div class="maprow">
+                <span class="canon-target">${item.canon}</span>
+                <span class="arr">←</span>
+                <span class="csv-found" title="${displayedCsvValue}">${displayedCsvValue}</span>
+                ${statusTag}
+            </div>
+        `;
+    }).join('');
+
+    const m = data.metrics || {};
+    let rightMetricsHTML = `
+        <div class="grid-8-boxes" style="height: 100%;">
+            <div class="stat"><div class="k">Total Samples</div><div class="v">${m.total || 0}</div></div>
+            <div class="stat"><div class="k">Valid</div><div class="v" style="color:var(--ok)">${m.valid || 0}</div></div>
+            <div class="stat"><div class="k">Invalid</div><div class="v" style="color:var(--bad)">${m.invalid || 0}</div></div>
+            <div class="stat"><div class="k">Platform Lifecycle</div><div class="v">${m.phase_transitions || 0}</div></div>
+            <div class="stat"><div class="k">System Lifecycle</div><div class="v" style="color:var(--sky)">${m.conform || 0}</div></div>
+            <div class="stat"><div class="k">Active Attrs</div><div class="v">${m.active_attrs || 0}<span style="font-size:12px;color:var(--ink-faint)">/17</span></div></div>
+            <div class="stat"><div class="k">Phases</div><div class="v">${m.unique_activities || 0}</div></div>
+            <div class="stat"><div class="k">Span</div><div class="v">${m.sparsity || '0.00 min'}</div></div>
+        </div>
+    `;
+
+    let tableHeadersHTML = ORIGINAL_17_MAPPINGS.map(item => `<th>${item.canon}</th>`).join('');
+    let TargetCollection = (currentGridMode === "clean") ? (data.preview_records || []) : (data.invalid_preview_records || []);
+
+    let tableRowsHTML = TargetCollection.map(row => {
+        let cells = ORIGINAL_17_MAPPINGS.map(item => {
+            let value = row[item.canon];
+            if (value === undefined || value === null || value === "") value = "-";
+            return `<td>${value}</td>`;
+        }).join('');
+        return `<tr>${cells}</tr>`;
+    }).join('');
+
+    if (TargetCollection.length === 0) {
+        tableRowsHTML = `<tr><td colspan="17" style="text-align:center; padding:30px; color:var(--ink-faint);">No rows available in this category view.</td></tr>`;
+    }
+
+    let statusPillHTML = (currentGridMode === "clean") 
+        ? `<span class="pill ok"><span class="dot"></span>Clean Stream Grid Preview</span>`
+        : `<span class="pill" style="background:var(--bad-wash); color:var(--bad);"><span class="dot" style="background:currentColor;"></span>Removed Invalid Samples</span>`;
+
+    document.getElementById('view').innerHTML = `
+        <div class="cta-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <span class="mono" style="font-size:13px; color:var(--ink-soft);">Stage 1 — Preprocess Log Alignment Parsing Configuration</span>
+            <button class="btn" onclick="triggerExport()">Export Canonical DataFrame</button>
+        </div>
+        <div class="macro-split">
+            <div class="macro-left">
+                <div class="panel" style="height: 100%;">
+                    <div class="ph"><h3>Sample attribute spec</h3></div>
+                    <div class="pb" style="height: 185px; overflow-y: auto;">${leftMappingHTML}</div>
+                </div>
+            </div>
+            <div class="macro-right">
+                ${rightMetricsHTML}
+            </div>
+        </div>
+        <div class="grid-toggle-bar">
+            <button id="btn-show-clean" class="grid-toggle-btn ${currentGridMode === 'clean' ? 'active' : ''}" onclick="toggleGridMode('clean')">Clean Stream</button>
+            <button id="btn-show-invalid" class="grid-toggle-btn ${currentGridMode === 'invalid' ? 'active' : ''}" onclick="toggleGridMode('invalid')">Removed Invalid Samples</button>
+        </div>
+        <div class="section-h" style="margin-top: 0px;">
+            <h2>Unified Matrix Stream Grid (First 20 Rows)</h2>
+            <div class="line" style="flex: 1; height: 1px; background: var(--sky-line);"></div>
+            ${statusPillHTML}
+        </div>
+        <div class="scrollx" style="overflow: auto; border: 1px solid var(--sky-line); border-radius: 10px; max-height: 400px;">
+            <table class="dt" style="width: 100%; border-collapse: collapse;">
+                <thead><tr>${tableHeadersHTML}</tr></thead>
+                <tbody>${tableRowsHTML}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+function toggleContextDropdown() {
+    const body = document.getElementById('details-pane-content-body');
+    const chevron = document.getElementById('context-chevron');
+    if (!body || !chevron) return;
+
+    if (isContextPaneOpen) {
+        body.style.display = 'none';
+        chevron.innerText = '▼';
+        isContextPaneOpen = false;
+    } else {
+        body.style.display = 'block';
+        chevron.innerText = '▲';
+        isContextPaneOpen = true;
+    }
+}
+
+function handleAttributeFilterChange(selectElement) {
+    activeAttributeFilterGroup = selectElement.value;
+    updateStage2AttributeList();
+}
+
+// --- KEEP A SINGLE CLEAN TRACK FUNCTION ---
+function selectAttributeTrack(attrKey) {
+    activeSelectedAttributeKey = attrKey;
+    document.querySelectorAll('.spec-attr-row').forEach(row => {
+        row.classList.remove('selected');
+    });
+    const selectedRow = document.getElementById(`attr-row-${attrKey}`);
+    if (selectedRow) selectedRow.classList.add('selected');
+    
+    // --- FIX: Dynamic Dropdown Population ---
+    const methodDropdown = document.getElementById('assessment-ml-method');
+    const chartDropdown = document.getElementById('assessment-chart-type');
+
+    if (methodDropdown && chartDropdown) {
+        if (attrKey === "seq_id") {
+            methodDropdown.innerHTML = `
+                <option value="gap_scan">Δ gap duplicate scan</option>
+                <option value="change_point">change point detection</option>
+            `;
+            chartDropdown.innerHTML = `
+                <option value="line">sequence line</option>
+                <option value="distribution">Δ distribution</option>
+                <option value="counts">counts</option>
+            `;
+        } else if (attrKey === "timestamp") {
+            methodDropdown.innerHTML = `
+                <option value="monotonicity">monotonicity scan</option>
+            `;
+            chartDropdown.innerHTML = `
+                <option value="timeline">Timeline</option>
+            `;
+        } else {
+            methodDropdown.innerHTML = `
+                <option value="metrics_summary">completeness summary</option>
+            `;
+            chartDropdown.innerHTML = `
+                <option value="counts">counts matrix</option>
+            `;
+        }
+        
+        // Ensure default elements are active instead of staying blank
+        methodDropdown.selectedIndex = 0;
+        chartDropdown.selectedIndex = 0;
+    }
+    
+    updateAttributeDetailsPane();
+    onAssessmentControlChange();
+}
+function updateStage2AttributeList() {
+    const listContainer = document.getElementById('spec-attribute-list-container');
+    if (!listContainer) return;
+    
+    const filteredItems = ORIGINAL_17_MAPPINGS.filter(item => activeAttributeFilterGroup === 'all' || item.group === activeAttributeFilterGroup);
+    
+    let filteredHTML = filteredItems.map(item => `
+        <div id="attr-row-${item.canon}" class="spec-attr-row ${item.canon === activeSelectedAttributeKey ? 'selected' : ''}" onclick="selectAttributeTrack('${item.canon}')">
+            <div class="spec-attr-bullet"></div>
+            <span>${item.canon}</span>
+        </div>
+    `).join('');
+        
+    if (!filteredHTML) {
+        filteredHTML = `<div style="color:var(--ink-faint); font-size:12px; text-align:center; padding:10px;">No attributes matching group</div>`;
+    }
+    listContainer.innerHTML = filteredHTML;
+    
+    // At the bottom of your updateStage2AttributeList() function:
+    if (filteredItems.length > 0) {
+        const standardKeys = filteredItems.map(i => i.canon);
+        if (!standardKeys.includes(activeSelectedAttributeKey)) {
+            activeSelectedAttributeKey = standardKeys[0];
+        }
+        // Force dropdown values to refresh cleanly
+        selectAttributeTrack(activeSelectedAttributeKey);
+    }
+}
+
+function syncAssessmentDropdowns(key) {
+    const methodDropdown = document.getElementById('assessment-ml-method');
+    const chartDropdown = document.getElementById('assessment-chart-type');
+
+    if (methodDropdown && chartDropdown) {
+        if (key === "seq_id") {
+            methodDropdown.innerHTML = `
+                <option value="gap_scan">Δ gap duplicate scan</option>
+                <option value="change_point">change point detection</option>
+            `;
+            chartDropdown.innerHTML = `
+                <option value="line">sequence line</option>
+                <option value="distribution">Δ distribution</option>
+                <option value="counts">counts</option>
+            `;
+        } else if (key === "timestamp") {
+            methodDropdown.innerHTML = `
+                <option value="monotonicity_scan">monotonicity scan</option>
+                <option value="inter_arrival">Inter-arrival outlier (z-score)</option>
+            `;
+            chartDropdown.innerHTML = `
+                <option value="timeline">Timeline</option>
+                <option value="dt_distribution">Δt distribution</option>
+            `;
+        } else {
+            methodDropdown.innerHTML = `
+                <option value="metrics_summary">completeness summary</option>
+            `;
+            chartDropdown.innerHTML = `
+                <option value="counts">counts matrix</option>
+            `;
+        }
+        
+        methodDropdown.selectedIndex = 0;
+        chartDropdown.selectedIndex = 0;
+    }
+    
+    if (typeof onAssessmentControlChange === 'function') {
+        onAssessmentControlChange();
+    }
+}
+function updateAttributeDetailsPane() {
+    const paneTitle = document.getElementById('details-pane-title-text');
+    const paneBody = document.getElementById('details-pane-content-body');
+    if (!paneBody || !paneTitle) return;
+
+    const data = ATTRIBUTE_METADATA_SPECS[activeSelectedAttributeKey];
+
+    paneTitle.innerHTML = `<span>About ${activeSelectedAttributeKey} · what it is, behaviour &amp; ML evaluation</span> <span id="context-chevron">${isContextPaneOpen ? '▲' : '▼'}</span>`;
+    
+    if (data && data.isStructured) {
+        let validItems = data.valid.map(item => `<li><span class="icon-ok">✓</span> <span>${item}</span></li>`).join('');
+        let anomalyItems = data.anomalies.map(item => `<li><span class="icon-bad">✖</span> <span>${item}</span></li>`).join('');
+
+        paneBody.innerHTML = `
+            <div class="detail-block-row">
+                <div class="detail-block-title">What it is</div>
+                <div class="detail-block-value">${data.desc}</div>
+            </div>
+            <div style="display: flex; gap: 24px; margin-bottom: 16px;">
+                <div style="flex: 1;">
+                    <div class="detail-block-title">Valid (positive) behaviour</div>
+                    <ul class="spec-list">${validItems}</ul>
+                </div>
+                <div style="flex: 1;">
+                    <div class="detail-block-title">Anomalies</div>
+                    <ul class="spec-list">${anomalyItems}</ul>
+                </div>
+            </div>
+            <div class="detail-block-row" style="margin-bottom:0;">
+                <div class="detail-block-title">How it’s evaluated — ML context</div>
+                <div class="detail-block-value" style="background: var(--sky-wash); border-left: 4px solid var(--sky); padding: 10px 14px; border-radius: 4px;">${data.eval}</div>
+            </div>
+        `;
+    }
+}
+
+
+function onAssessmentControlChange() {
+    const methodDropdown = document.getElementById('assessment-ml-method');
+    const chartDropdown = document.getElementById('assessment-chart-type');
+    const verdictBadge = document.getElementById('assessment-verdict-badge');
+    const canvas = document.getElementById('assessment-render-canvas');
+    
+    if (!methodDropdown || !chartDropdown || !canvas) return;
+
+    {
+        const ATTR_METHODS = {
+            seq_id:           [{v:"gap_scan",            l:"Δ gap duplicate scan"},      {v:"change_point",       l:"change point detection"}, {v:"metrics_summary", l:"Completeness Summary"}],
+            timestamp:        [{v:"monotonicity_scan",   l:"monotonicity scan"},         {v:"inter_arrival",      l:"inter-arrival outlier"},  {v:"metrics_summary", l:"Completeness Summary"}],
+            event_code:       [{v:"frequency_chart", l:"Frequency / rare-category"}, {v:"metrics_summary", l:"Completeness Summary"}],
+            extra_srcinfo:    [{v:"frequency_chart", l:"Source Distribution"},        {v:"metrics_summary", l:"Completeness Summary"}],
+            log_level:        [{v:"frequency_chart", l:"Severity Distribution"},      {v:"metrics_summary", l:"Completeness Summary"}],
+            event_category:   [{v:"frequency_chart", l:"Category Distribution"},      {v:"metrics_summary", l:"Completeness Summary"}],
+            event_type:       [{v:"frequency_chart", l:"Type Distribution"},          {v:"metrics_summary", l:"Completeness Summary"}],
+            phase:            [{v:"frequency_chart", l:"Phase Distribution"},         {v:"metrics_summary", l:"Completeness Summary"}],
+            state:            [{v:"frequency_chart", l:"State Distribution"},         {v:"metrics_summary", l:"Completeness Summary"}],
+            substate:         [{v:"frequency_chart", l:"Substate Distribution"},      {v:"metrics_summary", l:"Completeness Summary"}],
+            activity:         [{v:"frequency_chart", l:"Activity Distribution"},      {v:"metrics_summary", l:"Completeness Summary"}],
+            depth:            [{v:"depth_trace",     l:"Call Depth Sequence"},        {v:"metrics_summary", l:"Completeness Summary"}],
+            message:          [{v:"length_distribution", l:"Length Distribution"},    {v:"metrics_summary", l:"Completeness Summary"}],
+            custom_data_size: [{v:"frequency_chart", l:"Size Distribution"},          {v:"metrics_summary", l:"Completeness Summary"}],
+            custom_data:      [{v:"value_distribution",  l:"Value Distribution"},     {v:"metrics_summary", l:"Completeness Summary"}],
+            ext_msg_length:   [{v:"length_distribution", l:"Length Distribution"},    {v:"metrics_summary", l:"Completeness Summary"}],
+            ext_message:      [{v:"length_distribution", l:"Length Distribution"},    {v:"metrics_summary", l:"Completeness Summary"}],
+        };
+        const CHART_OPTIONS = {
+            gap_scan:            [{v:"line", l:"sequence line"}, {v:"distribution", l:"Δ distribution"}, {v:"counts", l:"counts"}],
+            change_point:        [{v:"line", l:"sequence line"}, {v:"distribution", l:"reset magnitude"}, {v:"counts", l:"counts"}],
+            monotonicity_scan:   [{v:"timeline",     l:"Timeline"}],
+            inter_arrival:       [{v:"dt_distribution", l:"Δt distribution"}],
+            frequency_chart:     [{v:"bar",          l:"Bar"}],
+            depth_trace:         [{v:"line",         l:"sequence line"}, {v:"distribution", l:"distribution"}],
+            length_distribution: [{v:"bar",          l:"Bar"}],
+            value_distribution:  [{v:"bar",          l:"Bar"}, {v:"line", l:"sequence line"}],
+            metrics_summary:     [{v:"counts",       l:"metrics table"}],
+        };
+
+        const attrMethods = ATTR_METHODS[activeSelectedAttributeKey] || [{v:"metrics_summary", l:"Completeness &amp; Quality Summary"}];
+        if (!methodDropdown.options.length || methodDropdown.options[0].value !== attrMethods[0].v) {
+            methodDropdown.innerHTML = attrMethods.map(m => `<option value="${m.v}">${m.l}</option>`).join('');
+            methodDropdown.selectedIndex = 0;
+        }
+
+        const currentMethod = methodDropdown.value;
+        const chartOpts = CHART_OPTIONS[currentMethod] || [{v:"counts", l:"metrics table"}];
+        if (!chartDropdown.options.length || !Array.from(chartDropdown.options).some(o => o.value === chartOpts[0].v)) {
+            chartDropdown.innerHTML = chartOpts.map(c => `<option value="${c.v}">${c.l}</option>`).join('');
+            chartDropdown.selectedIndex = 0;
+        }
+
+        const currentChart = chartDropdown.value;
+
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.get_assessment_chart_data) {
+            window.pywebview.api.get_assessment_chart_data(activeSelectedAttributeKey, currentMethod, currentChart)
+                .then(res => {
+                    if (res && res.verdict && verdictBadge) {
+                        verdictBadge.className = `assessment-status ${res.verdict}`;
+                        verdictBadge.innerText = res.verdict.toUpperCase();
+                    }
+                    if (typeof renderAssessmentCanvasGraph === 'function') {
+                        renderAssessmentCanvasGraph(res);
+                    }
+                }).catch(err => {
+                    canvas.innerHTML = `<div class="muted" style="padding:16px;">Pipeline error: ${err}</div>`;
+                });
+        }
+    }
+}
+let _activeChart = null;
+
+function renderAssessmentCanvasGraph(data) {
+    const container = document.getElementById('assessment-render-canvas');
+    const scanLine = document.getElementById('assessment-scan-line');
+    const inferPanel = document.getElementById('attr-inference-panel');
+    const inferEl = document.getElementById('assessment-inference-text');
+    const statusColor = {ok:'var(--ok)', warn:'var(--warn)', bad:'var(--bad)', info:'var(--sky-deep)'};
+
+    function _showInference(text, verdict) {
+        if (!inferPanel || !inferEl) return;
+        inferEl.innerText = text || '';
+        inferEl.style.borderLeftColor = statusColor[verdict] || 'var(--sky)';
+        inferPanel.style.display = text ? 'block' : 'none';
+    }
+
+    if (_activeChart) {
+        _activeChart.destroy();
+        _activeChart = null;
+    }
+
+    if (!data || data.type === "empty") {
+        container.innerHTML = `<div class="muted">${(data && data.reason) || 'No configuration data available.'}</div>`;
+        if (scanLine) scanLine.style.display = 'none';
+        if (inferPanel) inferPanel.style.display = 'none';
+        return;
+    }
+
+    if (data.type === "metrics_summary") {
+        const rows = data.rows || [];
+
+        const rowsHtml = rows.map(row => {
+            const actualColor = statusColor[row.status] || 'var(--ink-soft)';
+            const statusDot = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${actualColor};flex-shrink:0;"></span>`;
+            return `
+            <div style="display:grid; grid-template-columns:140px 1fr 28px 1fr 22px; align-items:center; gap:6px; padding:8px 10px; border-bottom:1px solid var(--rule);">
+                <span style="font-size:11.5px; font-weight:600; color:var(--ink-soft); white-space:nowrap;">${row.label}</span>
+                <span class="mono" style="font-size:13px; font-weight:700; color:${actualColor};">${row.actual}</span>
+                <span style="font-size:10px; color:var(--ink-faint); text-align:center;">vs</span>
+                <span class="mono" style="font-size:12px; color:var(--sky-deep);">${row.expected}</span>
+                ${statusDot}
+            </div>`;
+        }).join('');
+
+        const headerHtml = `
+            <div style="display:grid; grid-template-columns:140px 1fr 28px 1fr 22px; gap:6px; padding:5px 10px 6px; border-bottom:2px solid var(--sky-line); margin-bottom:2px;">
+                <span style="font-size:10px; font-weight:700; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em;">Metric</span>
+                <span style="font-size:10px; font-weight:700; color:var(--bad); text-transform:uppercase; letter-spacing:.05em;">Actual</span>
+                <span></span>
+                <span style="font-size:10px; font-weight:700; color:var(--sky-deep); text-transform:uppercase; letter-spacing:.05em;">Expected</span>
+                <span></span>
+            </div>`;
+
+        if (scanLine) {
+            const scanText = data.actual ? String(data.actual) : '';
+            scanLine.textContent = scanText;
+            scanLine.style.display = scanText ? 'block' : 'none';
+        }
+        _showInference(data.inference, data.verdict);
+
+        container.innerHTML = `<div style="width:100%; align-self:flex-start; overflow-x:auto;">${headerHtml}${rowsHtml}</div>`;
+        return;
+    }
+
+    if (data.type === "bar_chart") {
+        if (scanLine) {
+            const scanText = data.note || '';
+            scanLine.textContent = scanText;
+            scanLine.style.display = scanText ? 'block' : 'none';
+        }
+        _showInference(data.inference, data.verdict);
+
+        container.innerHTML = `<canvas id="vera-chart" style="width:100%; max-height:240px;"></canvas>`;
+        const ctx = document.getElementById('vera-chart').getContext('2d');
+
+        const valueLabelsPlugin = {
+            id: 'veraValueLabels',
+            afterDatasetsDraw(chart) {
+                const c = chart.ctx;
+                chart.data.datasets.forEach((dataset, i) => {
+                    chart.getDatasetMeta(i).data.forEach((el, idx) => {
+                        const v = dataset.data[idx];
+                        if (!v && v !== 0) return;
+                        c.save();
+                        c.font = 'bold 10px "JetBrains Mono", monospace';
+                        c.fillStyle = '#4a5b6a';
+                        c.textAlign = 'center';
+                        c.textBaseline = 'bottom';
+                        c.fillText(v, el.x, el.y - 2);
+                        c.restore();
+                    });
+                });
+            }
+        };
+
+        _activeChart = new Chart(ctx, {
+            type: 'bar',
+            plugins: [valueLabelsPlugin],
+            data: {
+                labels: data.x,
+                datasets: [{
+                    data: data.y,
+                    backgroundColor: 'rgba(43,127,212,0.72)',
+                    borderColor: 'rgba(43,127,212,0.92)',
+                    borderWidth: 1,
+                    borderRadius: 3,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                animation: false,
+                layout: { padding: { top: 18 } },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        ticks: { font: { family: 'JetBrains Mono', size: 10 }, maxRotation: 40, color: '#4a5b6a' },
+                        grid: { color: 'rgba(0,0,0,0.04)' }
+                    },
+                    y: {
+                        ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#4a5b6a' },
+                        grid: { color: 'rgba(0,0,0,0.04)' },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        return;
+    }
+
+    if (data.type === "line_chart") {
+        if (scanLine) {
+            const scanText = data.note || data.metric || '';
+            scanLine.textContent = scanText;
+            scanLine.style.display = scanText ? 'block' : 'none';
+        }
+        _showInference(data.inference, data.verdict);
+
+        container.innerHTML = `<canvas id="vera-chart" style="width:100%; max-height:220px;"></canvas>`;
+        const ctx = document.getElementById('vera-chart').getContext('2d');
+
+        const hasHighlights = data.highlights && data.highlights.some(h => h === 1);
+        const pointColors = (data.highlights || []).map(h =>
+            h === 1 ? 'rgba(210,69,69,0.85)' : 'rgba(43,127,212,0.7)'
+        );
+        const pointRadius = (data.highlights || []).map(h => h === 1 ? 4 : 2);
+
+        _activeChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.x,
+                datasets: [{
+                    label: data.title || activeSelectedAttributeKey,
+                    data: data.y,
+                    borderColor: 'rgba(43,127,212,0.8)',
+                    backgroundColor: 'rgba(43,127,212,0.07)',
+                    borderWidth: 1.5,
+                    pointRadius: pointRadius,
+                    pointBackgroundColor: pointColors,
+                    pointBorderWidth: 0,
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                animation: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: ctx => `Record #${ctx[0].label}`,
+                            label: ctx => `${activeSelectedAttributeKey}: ${ctx.raw}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { font: { family: 'JetBrains Mono', size: 10 }, maxTicksLimit: 10 },
+                        grid: { color: 'rgba(0,0,0,0.04)' }
+                    },
+                    y: {
+                        ticks: { font: { family: 'JetBrains Mono', size: 10 } },
+                        grid: { color: 'rgba(0,0,0,0.04)' }
+                    }
+                }
+            }
+        });
+        return;
+    }
+
+    container.innerHTML = `<div class="muted">Unsupported chart type: ${data.type}</div>`;
+}
+
+function renderAssessmentView() {
+    document.getElementById('view').innerHTML = `
+        <div class="cta-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <span class="mono" style="font-size:13px; color:var(--ink-soft);">Stage 2 — Operational Trace Attribute Assessment Matrix</span>
+        </div>
+
+        <div class="macro-split" style="margin-top: 10px; align-items: flex-start;">
+            <div class="macro-left">
+                <div class="panel" style="height: 480px;">
+                    <div class="ph" style="justify-content: space-between;">
+                        <h3>Sample Attribute Spec</h3>
+                        <select id="attr-group-dropdown" class="filter-dropdown-select" onchange="handleAttributeFilterChange(this)">
+                            <option value="all">All Attribute Groups</option>
+                            <option value="identity_time">Identity &amp; Time</option>
+                            <option value="code_semantics">Code &amp; Semantics</option>
+                            <option value="lifecycle_fsm">Lifecycle &amp; FSM</option>
+                            <option value="payload_messages">Payload &amp; Messages</option>
+                        </select>
+                    </div>
+                    <div class="pb" id="spec-attribute-list-container" style="flex:1; padding: 10px 12px;"></div>
+                </div>
+            </div>
+            
+            <div class="macro-right">
+                <div class="detail-pane-wrapper">
+                    <div class="detail-pane-header" id="details-pane-title-text" onclick="toggleContextDropdown()">
+                        <span>About Spectrum Context</span>
+                        <span id="context-chevron">▼</span>
+                    </div>
+                    <div class="detail-pane-body" id="details-pane-content-body"></div>
+                </div>
+
+                <div class="assessment-card">
+                    <div class="assessment-header">
+                        <div class="assessment-title-group">
+                            <span class="assessment-title">Assessment</span>
+                            <span id="assessment-verdict-badge" class="assessment-status ok">OK</span>
+                        </div>
+                        <div class="assessment-controls">
+                            <span class="control-select-label">ML Method</span>
+                            <select id="assessment-ml-method" class="control-dropdown-input" onchange="onAssessmentControlChange()">
+                                <option value="gap_scan">Δ gap duplicate scan</option>
+                                <option value="change_point">change point detection</option>
+                            </select>
+                            
+                            <span class="control-select-label">Chart</span>
+                            <select id="assessment-chart-type" class="control-dropdown-input" onchange="onAssessmentControlChange()">
+                                <option value="line">sequence line</option>
+                                <option value="distribution">Δ distribution</option>
+                                <option value="counts">counts</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="assessment-render-canvas" class="assessment-body-canvas"></div>
+                    <div id="assessment-scan-line" style="padding:4px 20px 14px; font-size:11.5px; font-family:'JetBrains Mono', monospace; color:var(--ink-soft); display:none;"></div>
+                </div>
+
+                <div class="assessment-card" id="attr-inference-panel" style="margin-top:14px; display:none;">
+                    <div class="assessment-header">
+                        <div class="assessment-title-group">
+                            <span class="assessment-title">Inference</span>
+                        </div>
+                    </div>
+                    <div style="padding:12px 16px;">
+                        <div class="inference" id="assessment-inference-text"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('attr-group-dropdown').value = activeAttributeFilterGroup;
+    updateStage2AttributeList();
+    
+    const body = document.getElementById('details-pane-content-body');
+    if (body) body.style.display = isContextPaneOpen ? 'block' : 'none';
+}
+
+function triggerExport() {
+    if (window.pywebview && window.pywebview.api) {
+        window.pywebview.api.export_canonical_file().then(res => {
+            if (res.status === "success") alert(res.message);
+        });
+    }
+}
+
+// ============================================================================
+// STAGE 3 — FEATURE ASSESSMENT CONTROLLER (COUPLED TO feature_assessment.py)
+// ============================================================================
+let activeSelectedFeatureKey = "F-LV";
+let _activeFeatureChartInstance = null;
+
+function selectFeatureKey(key) {
+    activeSelectedFeatureKey = key;
+    // Visually match radio elements
+    document.querySelectorAll('input[name="feat-sel"]').forEach(el => {
+        el.checked = (el.id === `f-${key.toLowerCase()}`);
+    });
+    fetchFeatureAssessmentData(key);
+}
+
+let featureChartInstance = null;
+
+function fetchFeatureAssessmentData(key) {
+    if (key === "F1") {
+        const chartType = document.getElementById("feat-chart-type-dropdown")?.value || "line";
+        
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.get_f1_chart_data) {
+            window.pywebview.api.get_f1_chart_data(chartType)
+                .then(res => {
+                    renderF1UIElements(res);
+                })
+                .catch(err => {
+                    console.error("Pipeline extraction error:", err);
+                    document.getElementById("feat-inference-text").innerText = "Execution Error: Failed to compute feature matrix metrics.";
+                });
+        } else {
+            document.getElementById("feat-inference-text").innerText = "Bridge Offline: Running in a disconnected browser view.";
+        }
+    }
+}
+function renderF1UIElements(data) {
+    // 1. Sync Text metrics dashboards with actual backend variables
+    const verdictEl = document.getElementById("feat-metric-verdict");
+    const scoreEl = document.getElementById("feat-metric-score");
+    const inferEl = document.getElementById("feat-inference-text");
+    const container = document.getElementById("feature-render-canvas");
+    
+    if (verdictEl) {
+        verdictEl.innerText = data.verdict || "INFO";
+        if (data.verdict === "VERIFIED OK") {
+            verdictEl.style.color = "var(--ok)";
+        } else if (data.verdict === "WARNING") {
+            verdictEl.style.color = "var(--warn)";
+        } else {
+            verdictEl.style.color = "var(--ink-faint)";
+        }
+    }
+    if (scoreEl) scoreEl.innerText = data.metric || "0.000s";
+    if (inferEl) inferEl.innerText = data.inference || "";
+
+    if (!container) return;
+    
+    // CRITICAL: Wipe out "Awaiting signal..." or old chart DOM remnants completely
+    container.innerHTML = `<canvas id="feature-chart-canvas-target" style="width: 100%; height: 100%; min-height: 270px;"></canvas>`;
+    
+    const canvasCtx = document.getElementById("feature-chart-canvas-target");
+    if (!canvasCtx) return;
+
+    // Destroy previous Chart instance if tracking one in memory
+    if (window.featureChartInstance) {
+        window.featureChartInstance.destroy();
+    }
+
+    // Determine if rendering the distribution bar histogram or the timeline line trace
+    const chartMode = data.type === "distribution" ? "bar" : "line";
+
+    // 2. Instantiate Chart.js using real canonical arrays
+    window.featureChartInstance = new Chart(canvasCtx, {
+        type: chartMode,
+        data: {
+            labels: data.x,
+            datasets: [{
+                label: chartMode === "bar" ? "Record Counts" : "Inter-arrival Latency (Δt)",
+                data: data.y,
+                borderColor: '#2b7fd4',
+                backgroundColor: chartMode === "bar" ? 'rgba(43, 127, 212, 0.6)' : 'rgba(43, 127, 212, 0.06)',
+                borderWidth: 2,
+                pointRadius: chartMode === "bar" ? 0 : 2,
+                tension: 0.1,
+                fill: chartMode === "line"
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    grid: { color: '#e7eef4' },
+                    title: { 
+                        display: true, 
+                        text: chartMode === "bar" ? "Latency Windows (seconds)" : "Record Index (seq_id)", 
+                        font: { size: 11, weight: '600' } 
+                    }
+                },
+                y: {
+                    grid: { color: '#e7eef4' },
+                    title: { 
+                        display: true, 
+                        text: chartMode === "bar" ? "Frequency (Count)" : "Time Delta (seconds)", 
+                        font: { size: 11, weight: '600' } 
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function renderFeatureCanvasGraph(res) {
+    const canvasContainer = document.getElementById('feature-render-canvas');
+    const infText = document.getElementById('feat-inference-text');
+    const infBox = document.getElementById('feat-inference-box');
+    const fId = document.getElementById('feat-display-id');
+    const fTitle = document.getElementById('feat-display-title');
+    const fBuilt = document.getElementById('feat-display-built');
+    const fMethod = document.getElementById('feat-display-method');
+    const fAnoms = document.getElementById('feat-display-anomalies');
+
+    if (!canvasContainer) return;
+    canvasContainer.innerHTML = '';
+    
+    // Clear legacy instances cleanly to stop canvas memory overlapping
+    if (_activeFeatureChartInstance) {
+        _activeFeatureChartInstance.destroy();
+        _activeFeatureChartInstance = null;
+    }
+
+    if (!res) return;
+
+    if (fId) fId.innerText = res.id || activeSelectedFeatureKey;
+    if (fTitle) fTitle.innerText = res.title || '';
+    if (fBuilt) fBuilt.innerText = res.built_from || 'built from behaviors';
+    if (fMethod) fMethod.innerText = res.method || '';
+    if (infText) infText.innerText = res.inference || 'Clean run stream.';
+    
+    if (fAnoms && res.anomalies) {
+        fAnoms.innerHTML = res.anomalies.map(a => `
+            <div style="display: flex; align-items: flex-start; gap: 6px;">
+                <span style="color: var(--sky); font-weight: bold;">·</span> ${a}
+            </div>
+        `).join('');
+    }
+
+    // Dynamic color washing matching your root layout colors
+    if (infBox) {
+        if (res.verdict === "bad") {
+            infBox.style.borderLeftColor = "var(--bad)";
+            infBox.style.backgroundColor = "var(--bad-wash)";
+        } else if (res.verdict === "warn") {
+            infBox.style.borderLeftColor = "var(--warn)";
+            infBox.style.backgroundColor = "var(--warn-wash)";
+        } else {
+            infBox.style.borderLeftColor = "var(--ok)";
+            infBox.style.backgroundColor = "var(--ok-wash)";
+        }
+    }
+
+    // Generate Chart.js graphics
+    if (res.type === "line_chart" || res.type === "bar_chart") {
+        const canvas = document.createElement('canvas');
+        canvas.style.height = "100%";
+        canvas.style.width = "100%";
+        canvasContainer.appendChild(canvas);
+
+        _activeFeatureChartInstance = new Chart(canvas.getContext('2d'), {
+            type: res.type === "bar_chart" ? 'bar' : 'line',
+            data: {
+                labels: res.x,
+                datasets: [{
+                    data: res.y,
+                    backgroundColor: res.type === "bar_chart" ? 'rgba(43,127,212,0.65)' : 'rgba(43,127,212,0.04)',
+                    borderColor: 'rgba(43,127,212,0.85)',
+                    borderWidth: 1.5,
+                    fill: true,
+                    pointRadius: res.type === "bar_chart" ? 0 : 2.5,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'var(--rule)' }, ticks: { font: { size: 10, family: 'JetBrains Mono' }, color: 'var(--ink-soft)' } },
+                    y: { grid: { color: 'var(--rule)' }, ticks: { font: { size: 10, family: 'JetBrains Mono' }, color: 'var(--ink-soft)' } }
+                }
+            }
+        });
+    } else {
+        canvasContainer.innerHTML = `
+            <div class="muted" style="display:flex; justify-content:center; align-items:center; height:100%; text-align:center; font-size:13px; padding: 20px;">
+                ${res.reason || 'No matched feature data baseline verified for this tracking selection.'}
+            </div>`;
+    }
+}
+function filterFeatureAssessmentList() {
+    const selectedGroup = document.getElementById('feature-group-dropdown').value;
+    const items = document.querySelectorAll('.feat-list-item');
+    
+    items.forEach(item => {
+        const itemGroup = item.getAttribute('data-group');
+        if (selectedGroup === 'all' || itemGroup === selectedGroup) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function selectFeatureKey(key) {
+    activeSelectedFeatureKey = key;
+    
+    // Reset background highlights across list rows
+    document.querySelectorAll('.feat-list-item').forEach(el => {
+        el.style.background = 'transparent';
+    });
+    
+    // Highlight selected item container row precisely
+    const activeRow = document.getElementById(`feat-item-row-${key}`);
+    if (activeRow) activeRow.style.background = 'var(--sky-wash2)';
+    
+    // Fetch directly from Python file via webview API bridge
+    if (window.pywebview && window.pywebview.api && window.pywebview.api.get_feature_metadata) {
+        window.pywebview.api.get_feature_metadata(key).then(res => {
+            document.getElementById('feature-about-box-content').innerText = res.about;
+        });
+    } else {
+        // Fallback to local dictionary copy if running wireframe-only
+        document.getElementById('feature-about-box-content').innerText = FEATURE_META_DICTIONARY[key];
+    }
+    
+    fetchFeatureAssessmentData(key);
+}
+
+let isFeatureContextPaneOpen = true;
+
+function toggleFeatureContextPaneBody() {
+    isFeatureContextPaneOpen = !isFeatureContextPaneOpen;
+    const body = document.getElementById('feature-context-pane-body');
+    const icon = document.getElementById('feature-context-toggle-icon');
+    if (body) body.style.display = isFeatureContextPaneOpen ? 'block' : 'none';
+    if (icon) icon.style.transform = isFeatureContextPaneOpen ? 'rotate(0deg)' : 'rotate(-90deg)';
+}
+
+function onFeatureControlChange() {
+    // Re-trigger dynamic backend execution calculation layer when dropdown variables change
+    fetchFeatureAssessmentData(activeSelectedFeatureKey);
+}
+
+// Adjusting selectFeatureKey engine loop to dynamically match elements
+function selectFeatureKey(key) {
+    activeSelectedFeatureKey = key;
+    
+    document.querySelectorAll('.feat-list-item').forEach(el => {
+        el.style.background = 'transparent';
+    });
+    
+    const activeRow = document.getElementById(`feat-item-row-${key}`);
+    if (activeRow) activeRow.style.background = 'var(--sky-wash2)';
+    
+    // Sync header textual fields safely
+    const fId = document.getElementById('feat-display-id');
+    const fTitle = document.getElementById('feat-display-title');
+    const aboutBox = document.getElementById('feature-about-box-content');
+    
+    if (fId) fId.innerText = key;
+    if (aboutBox) {
+        aboutBox.innerText = FEATURE_META_DICTIONARY[key] || "No verification track profile found.";
+    }
+    
+    // Fallback safe names
+    if (fTitle) {
+        const itemRow = document.getElementById(`feat-item-row-${key}`);
+        if (itemRow) {
+            const rawTxt = itemRow.querySelector('div div').innerText;
+            fTitle.innerText = rawTxt.split('·')[1]?.trim() || rawTxt;
+        }
+    }
+    
+    fetchFeatureAssessmentData(key);
+}
+</script>
+</body>
+</html>
